@@ -1,0 +1,7 @@
+{
+        "name": "com.jerryq0101.tens_project_communication",
+        "description": "TENs project communication",
+        "path": "/Users/jerryqi/Documents/Github/tens_project/local_app/pipe_writer",
+        "type": "stdio",
+        "allowed_origins": ["chrome-extension://onoigofknpgdepiikbbfjkpdmloienjc/"]
+}

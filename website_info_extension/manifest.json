@@ -1,0 +1,14 @@
+{
+        "manifest_version": 3,
+        "version": "1.0",
+        "name": "tens_extension",
+        "description": "Extension to control the tens unit",
+        "permissions": ["nativeMessaging"],
+        "action": {
+
+        },
+
+        "background": {
+                "service_worker": "background.js"
+        }
+}

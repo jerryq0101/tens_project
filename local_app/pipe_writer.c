@@ -23,7 +23,6 @@ char output_message[MAXLINE];
 int main(void)
 {
         // Check if can write to pipe
-        printf("Connecting to pipe... \n");
         int pipe_wr = open(PIPE_PATH, O_WRONLY | O_NONBLOCK);
         if (pipe_wr < 0)
         {
@@ -34,7 +33,6 @@ int main(void)
         {
                 read_message();
                 usleep(10000);
-                write_message();
 
                 if (input_message[9])
                 {
@@ -42,12 +40,13 @@ int main(void)
                         int bytes_written = write(pipe_wr, &input_message[9], 1);
                         if (bytes_written > 0)
                         {
-                                printf("Written %d to Pipe", input_message[9]);
+                                fprintf(stderr, "Written %d to Pipe", input_message[9]);
                                 
                         } else
                         {
-                                printf("Failed to write to pipe as bytes written was 0 or less");
+                                fprintf(stderr, "Failed to write to pipe as bytes written was 0 or less");
                         }
+                        write_message();
                 }
                 else // Input not loaded
                 {
@@ -75,20 +74,22 @@ void read_message()
 
 void write_message()
 {
-        uint32_t length = 11;
+        int on = input_message[9];
+
+        const char *response;
+        if (on) {
+                response = "{\"on\":1}";
+        } else {
+                response = "{\"on\":0}";
+        }
+
+        uint32_t length = strlen(response);
 
         // Write the 32 bit / 4 byte prefix
         fwrite(&length, 4, 1, stdout);
         
         // Write the actual message
-        fwrite("{\"on\": ", 1, 7, stdout);
-        fwrite("\"", 1, 1, stdout);
-        fwrite(&input_message[9], 1, 1, stdout);
-        fwrite("\"", 1, 1, stdout);
-        fwrite("}", 1, 1, stdout);
+        fwrite(response, 1, length, stdout);
 
         fflush(stdout);
-
-        // Write the 32 bit / 4 byte prefix
-        fwrite(&length, 4, 1, stderr);
 }

@@ -22,11 +22,12 @@ char output_message[MAXLINE];
 
 int main(void)
 {
+        fprintf(stderr, "Connecting to the pipe...");
         // Check if can write to pipe
         int pipe_wr = open(PIPE_PATH, O_WRONLY | O_NONBLOCK);
         if (pipe_wr < 0)
         {
-                printf("Failed to open open pipe \n");
+                fprintf(stderr, "Failed to open open pipe \n");
                 return -1;
         }
         else // Write the read value to pipe
@@ -50,7 +51,7 @@ int main(void)
                 }
                 else // Input not loaded
                 {
-                        printf("Failed to write to pipe as toggle digit is not loaded");
+                        fprintf(stderr, "Failed to write to pipe as toggle digit is not loaded");
                 }
         }
         return 0;
@@ -64,7 +65,7 @@ void read_message()
 
         if (length <= 0)
         {
-                printf("Failed to read\n");
+                fprintf(stderr, "Failed to read\n");
         }
 
         // read the rest of the bits from stdin

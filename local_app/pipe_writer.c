@@ -22,7 +22,7 @@ char output_message[MAXLINE];
 
 int main(void)
 {
-        fprintf(stderr, "Connecting to the pipe...");
+        fprintf(stderr, "Connecting to the pipe...\n");
         // Check if can write to pipe
         int pipe_wr = open(PIPE_PATH, O_WRONLY | O_NONBLOCK);
         if (pipe_wr < 0)
@@ -30,14 +30,20 @@ int main(void)
                 fprintf(stderr, "Failed to open open pipe \n");
                 return -1;
         }
-        else // Write the read value to pipe
+        else 
         {
+                // Since browser runs this file with stdin to communicate, 
+                // read and write operations don't have delays
+                
+                // Read value from browser
                 read_message();
-                usleep(10000);
 
-                if (input_message[9])
+                // write value back to browser
+                write_message();
+
+                // Write value to pipe
+                if (input_message[9]) 
                 {
-                        // write to pipe
                         int bytes_written = write(pipe_wr, &input_message[9], 1);
                         if (bytes_written > 0)
                         {
@@ -47,7 +53,6 @@ int main(void)
                         {
                                 fprintf(stderr, "Failed to write to pipe as bytes written was 0 or less");
                         }
-                        write_message();
                 }
                 else // Input not loaded
                 {
@@ -60,7 +65,7 @@ int main(void)
 void read_message()
 {
         // read 32 bits from stdin
-        uint32_t length = 0;
+        uint32_t length;
         fread(&length, 4, 1, stdin);
 
         if (length <= 0)
@@ -75,9 +80,9 @@ void read_message()
 
 void write_message()
 {
-        int on = input_message[9];
+        int on = input_message[9] - '0';
 
-        const char *response;
+        char *response;
         if (on) {
                 response = "{\"on\":1}";
         } else {
@@ -86,10 +91,10 @@ void write_message()
 
         uint32_t length = strlen(response);
 
-        // Write the 32 bit / 4 byte prefix
+        // Write the 4 byte each, 1 number of 4 bytes prefix
         fwrite(&length, 4, 1, stdout);
         
-        // Write the actual message
+        // Write the actual message, 1 byte each, length number of 1 bytes
         fwrite(response, 1, length, stdout);
 
         fflush(stdout);

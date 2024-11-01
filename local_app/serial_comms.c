@@ -5,10 +5,14 @@
 #include <termios.h> // For serial port settings
 #include <unistd.h>  // For read/write
 
-/* Function to open serial port */
+#define PIPE_PATH "./tmp/tens_control"
+
+void print_arduino_response(int serial_fd);
+void write_to_arduino(int serial_fd, char *input);
+
+// Open serial port
 int initSerial(const char *portname) 
 {
-    // Open serial port
     // O_RDWR: Read/Write mode
     // O_NOCTTY: Don't allow controlling terminal
     int fd = open(portname, O_RDWR | O_NOCTTY);
@@ -46,12 +50,23 @@ int initSerial(const char *portname)
     return fd;
 }
 
-/* Test program */
-int main() 
+int main()
 {
+    // Pipe Connection
+    printf("Connecting to pipe... \n");
+
+    int pipe_rd = open(PIPE_PATH, O_RDONLY | O_NONBLOCK);
+    if (pipe_rd < 0)
+    {
+            printf("Failed to open open pipe \n");
+            return -1;
+    }
+
+    printf("PIPE OPENED\n");
+
     // Arduino port
     const char *port = "/dev/cu.usbmodem101"; 
-    char input[100];
+    char input[100] = {0};
     int serial_fd;
 
     // Open serial connection
@@ -65,34 +80,45 @@ int main()
 
     // Main communication loop
     while(1) {
-        printf("Enter command to send (1=on, 0=off, q=quit): ");
-        if (fgets(input, sizeof(input), stdin) == NULL) break;
+        int bytes_read = read(pipe_rd, input, 1); // No cost here
+        input[1] = 0;
 
-        // Remove newline
-        input[strcspn(input, "\n")] = 0;
+        if (bytes_read > 0)
+        {
+            // From Chrome Browser
+            printf("Received: %c\n", input[0]);
 
-        // Check for quit command
-        if (input[0] == 'q') break;
+            // Send command to Arduino
+            write_to_arduino(serial_fd, input); // Cost here 
 
-        // Send command to Arduino
-        int bytes_written = write(serial_fd, input, strlen(input));
-        if (bytes_written < 0) {
-            printf("Error writing to serial port\n");
-            continue;
+            usleep(100000); // 0.1 seconds: Consideration for hardware speed at 9600 baud 
+            // + Arduino Processing
+
+            // Read response from Arduino
+            print_arduino_response(serial_fd); 
         }
-
-        // // Read response from Arduino
-        usleep(100000);
-        char buffer[100];
-        int bytes_read = read(serial_fd, buffer, sizeof(buffer) - 1);
-        if (bytes_read > 0) {
-            buffer[bytes_read] = '\0';
-            printf("Arduino response: %s\n", buffer);
-        }
-        
     }
 
     // Close serial port
     close(serial_fd);
     return 0;
+}
+
+void write_to_arduino(int serial_fd, char *input)
+{
+        // Send command to Arduino
+        int bytes_written = write(serial_fd, input, strlen(input));
+        if (bytes_written < 0) {
+            printf("Error writing to serial port\n");
+        }
+}
+
+void print_arduino_response(int serial_fd) 
+{
+    char buffer[100];
+    int bytes_read = read(serial_fd, buffer, sizeof(buffer) - 1);
+    if (bytes_read > 0) {
+        buffer[bytes_read] = '\0';
+        printf("Arduino response: %s\n", buffer);
+    }
 }

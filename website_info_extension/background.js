@@ -4,36 +4,45 @@ chrome.runtime.onInstalled.addListener(() => {
         });
 });
 
-chrome.action.onClicked.addListener(async (tab) => {
-        const prevState = await chrome.action.getBadgeText({ tabId: tab.id });
-        // Next state will always be the opposite
-        const nextState = prevState === 'ON' ? 'OFF' : 'ON';
+// chrome.action.onClicked.addListener(async (tab) => {
+//         const prevState = await chrome.action.getBadgeText({ tabId: tab.id });
+//         // Next state will always be the opposite
+//         const nextState = prevState === 'ON' ? 'OFF' : 'ON';
 
-        console.log("SEND DATA");
-        chrome.runtime.sendNativeMessage(
-                'com.jerryq0101.tens_project_communication',
-                {state: nextState == "ON" ? 1 : 0},
-                function (response) {
-                        console.log("Received " + response.on);
-                }
-        );
+//         console.log("SEND DATA");
+//         chrome.runtime.sendNativeMessage(
+//                 'com.jerryq0101.tens_project_communication',
+//                 {state: nextState == "ON" ? 1 : 0},
+//                 function (response) {
+//                         console.log("Received " + response.on);
+//                 }
+//         );
 
-        // Set the action badge to the next state
-        await chrome.action.setBadgeText({
-                text: nextState,
-        });
-});
+//         // Set the action badge to the next state
+//         await chrome.action.setBadgeText({
+//                 text: nextState,
+//         });
+// });
+
+
+let shockTabId = -1;
+let state = 0;
+
 
 chrome.webRequest.onBeforeRequest.addListener(
-        function(request) {
+        async function(request) {
                 // Ignore requests made by service workers
                 if (request.frameId === -1) {
                         return;
                 }
-
+                
+                // Blocking instagram
                 if ((new RegExp("instagram.com")).test(request.url))
                 {
+                        // Debug to check its the right url
                         console.log(request.url);
+                        
+                        // Send message to activate shock
                         chrome.runtime.sendNativeMessage(
                                 'com.jerryq0101.tens_project_communication',
                                 {state: 1},
@@ -41,6 +50,8 @@ chrome.webRequest.onBeforeRequest.addListener(
                                         console.log("Received " + response.on);
                                 }
                         );
+                        
+                        // Set state to allow this specific shock redirect to be stored
                         state = 1;
                 }
         },
@@ -50,22 +61,27 @@ chrome.webRequest.onBeforeRequest.addListener(
         []
 );
 
-let shockTabId = -1;
-let state = 0;
-
 chrome.webRequest.onCompleted.addListener(
-        function(details)
+        async function(details)
         {
-                // Ignore requests made by service workers
+                // Ignore requests made by service workers (since even after closing tabs they make requests and shit)
                 if (details.frameId === -1) {
                         return;
                 }
 
-                if ((new RegExp("google.com")).test(details.url) && state) {
-                        // Store the tab ID
+                // Procrastination specific URL and Tab has completed loading and 
+                if ((new RegExp("google.com")).test(details.url) && state) 
+                        {
+                        
                         shockTabId = details.tabId;
                         console.log("Tab ID stored:", shockTabId);
                         state = 0;
+
+                        // Change the badge state
+                        const nextState = 'ON';
+                        await chrome.action.setBadgeText({
+                                text: nextState,
+                        });
                 }
         },
         {
@@ -75,10 +91,11 @@ chrome.webRequest.onCompleted.addListener(
 );
 
 chrome.tabs.onRemoved.addListener(
-        function(tabId, removeInfo) {
-                if (tabId === shockTabId)
+        async function(tabId, removeInfo) {
+                if (tabId === shockTabId) // If we closed the procrastination tab
                 {
                         console.log("Tab Closed:", tabId);
+
                         // Send native message to stop the shock
                         chrome.runtime.sendNativeMessage(
                                 'com.jerryq0101.tens_project_communication',
@@ -87,6 +104,12 @@ chrome.tabs.onRemoved.addListener(
                                 console.log("Received " + response.on);
                                 }
                         );
+
+                        // Change the badge state
+                        const nextState = 'OFF';
+                        await chrome.action.setBadgeText({
+                                text: nextState,
+                        });
                 }
         }
 );

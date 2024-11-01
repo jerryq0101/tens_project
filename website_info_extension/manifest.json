@@ -3,9 +3,20 @@
         "version": "1.0",
         "name": "tens_extension",
         "description": "Extension to control the tens unit",
-        "permissions": ["nativeMessaging"],
+        "permissions": ["nativeMessaging", "webRequest", "declarativeNetRequest", "declarativeNetRequestWithHostAccess"],
+        "host_permissions": [
+                "<all_urls>"
+        ],
         "action": {
 
+        },
+
+        "declarative_net_request": {
+                "rule_resources": [{
+                        "id": "ruleset_1",
+                        "enabled": true,
+                        "path": "rules_1.json"
+                }]
         },
 
         "background": {

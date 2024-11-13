@@ -16,7 +16,7 @@ int initSerial(const char *portname)
     // O_RDWR: Read/Write mode
     // O_NOCTTY: Don't allow controlling terminal
     int fd = open(portname, O_RDWR | O_NOCTTY);
-    
+
     if (fd == -1) {
         printf("Error opening port: %s\n", strerror(errno));
         return -1;

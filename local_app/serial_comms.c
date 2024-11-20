@@ -91,11 +91,11 @@ int main()
             // Send command to Arduino
             write_to_arduino(serial_fd, input); // Cost here 
 
-            usleep(100000); // 0.1 seconds: Consideration for hardware speed at 9600 baud 
+            usleep(10000); // 0.1 seconds: Consideration for hardware speed at 9600 baud 
             // + Arduino Processing
 
             // Read response from Arduino
-            print_arduino_response(serial_fd); 
+            // print_arduino_response(serial_fd); 
         }
     }
 

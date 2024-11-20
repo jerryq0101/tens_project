@@ -18,6 +18,7 @@ void setup() {
   delay(MOVE_DELAY);
   // Serial.println("TENS Unit Control Ready");
   // Serial.println("Enter 1 to start, 0 to stop");
+
 }
 
 void loop() {
@@ -52,6 +53,7 @@ void processSerialInput() {
 }
 
 void moveServo() {
+
   if (isIncreasing) {
     // Moving up
     if (currentAngle < MAX_ANGLE) {
@@ -65,6 +67,7 @@ void moveServo() {
       // Serial.println("Maximum intensity reached");
     }
   } else // !isIncreasing
+
   {
     // Moving down
     if (currentAngle > MIN_ANGLE) {
@@ -78,4 +81,5 @@ void moveServo() {
       // Serial.println("TENS unit fully off");
     }
   }
+
 }
